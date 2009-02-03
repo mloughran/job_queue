@@ -10,7 +10,7 @@ This should get you started:
 
 Before you can do anything you must specify an adapter to use
 
-    JobQueue.adapter = JobQueue::BeanstalkdAdapter.new
+    JobQueue.adapter = JobQueue::BeanstalkAdapter.new
 
 Jobs can then be simply added to the queue
 
@@ -47,8 +47,8 @@ Adapters
 
 Take your pick! Right now we have:
 
-Beanstalkd
-----------
+Beanstalk
+---------
 <http://xph.us/software/beanstalkd/>
 
 AMQP

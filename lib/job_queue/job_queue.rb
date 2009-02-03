@@ -9,7 +9,7 @@
 # 
 # Before use, an adapter must be chosen:
 # 
-#   JobQueue.adapter = JobQueue::BeanstalkdAdapter.new
+#   JobQueue.adapter = JobQueue::BeanstalkAdapter.new
 # 
 # Jobs can then be simply added to the queue with
 # 
