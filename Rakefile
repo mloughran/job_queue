@@ -6,10 +6,10 @@ require 'spec/rake/spectask'
 
 GEM = "job_queue"
 GEM_VERSION = "0.0.1"
-AUTHOR = "Your Name"
-EMAIL = "Your Email"
-HOMEPAGE = "http://example.com"
-SUMMARY = "A gem that provides..."
+AUTHOR = "Martyn Loughran"
+EMAIL = "me@mloughran.com"
+HOMEPAGE = "http://mloughran.com"
+SUMMARY = "JobQueue means you don't have to worry about your queue any more!"
 
 spec = Gem::Specification.new do |s|
   s.name = GEM
