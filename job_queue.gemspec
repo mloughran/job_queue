@@ -6,14 +6,13 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Martyn Loughran"]
-  s.autorequire = %q{job_queue}
   s.date = %q{2009-02-05}
   s.description = %q{JobQueue means you don't have to worry about your queue any more!}
   s.email = %q{me@mloughran.com}
-  s.extra_rdoc_files = ["README.markdown", "LICENSE"]
-  s.files = ["LICENSE", "README.markdown", "Rakefile", "lib/job_queue", "lib/job_queue/adapters", "lib/job_queue/adapters/amqp_adapter.rb", "lib/job_queue/adapters/beanstalk_adapter.rb", "lib/job_queue/adapters/test_adapter.rb", "lib/job_queue/adapters/verbose_adapter.rb", "lib/job_queue/job_queue.rb", "lib/job_queue.rb", "spec/amqp_adapter_spec.rb", "spec/beanstalk_adapter_spec.rb", "spec/job_queue_spec.rb", "spec/spec_helper.rb", "spec/test_adapter_spec.rb", "spec/verbose_adapter_spec.rb"]
+  s.files = ["README.markdown", "VERSION.yml", "lib/job_queue", "lib/job_queue/adapters", "lib/job_queue/adapters/amqp_adapter.rb", "lib/job_queue/adapters/beanstalk_adapter.rb", "lib/job_queue/adapters/test_adapter.rb", "lib/job_queue/adapters/verbose_adapter.rb", "lib/job_queue/job_queue.rb", "lib/job_queue.rb", "spec/amqp_adapter_spec.rb", "spec/beanstalk_adapter_spec.rb", "spec/job_queue_spec.rb", "spec/spec_helper.rb", "spec/test_adapter_spec.rb", "spec/verbose_adapter_spec.rb"]
   s.has_rdoc = true
-  s.homepage = %q{http://github.com/mloughran/job_queue/}
+  s.homepage = %q{http://github.com/mloughran/job_queue}
+  s.rdoc_options = ["--inline-source", "--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.1}
   s.summary = %q{JobQueue means you don't have to worry about your queue any more!}
