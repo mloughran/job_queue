@@ -1,3 +1,4 @@
+require 'logger'
 require 'job_queue/job_queue'
 
 JobQueue.autoload 'AMQPAdapter', 'job_queue/adapters/amqp_adapter'

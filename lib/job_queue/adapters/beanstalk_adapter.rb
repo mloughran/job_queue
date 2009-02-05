@@ -13,7 +13,7 @@ class JobQueue::BeanstalkAdapter
     loop do
       begin
         job = @beanstalk.reserve
-        puts "Beanstalk received #{job.body}"
+        JobQueue.logger.info "Beanstalk received #{job.body}"
         yield job.body
         job.delete
       rescue => e

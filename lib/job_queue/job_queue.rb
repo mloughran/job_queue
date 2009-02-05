@@ -18,6 +18,16 @@
 class JobQueue
   class << self
     attr_accessor :adapter
+    attr_accessor :logger
+    
+    def logger
+      @logger ||= begin
+        logger = Logger.new(STDOUT)
+        logger.level = Logger::WARN
+        logger.debug("Created logger")
+        logger
+      end
+    end
   end
   
   def self.put(string)
@@ -27,7 +37,7 @@ class JobQueue
   def self.subscribe(error_report = nil, &block)
     catch :stop do
       error_report ||= Proc.new do |job, e|
-        puts \
+        JobQueue.logger.error \
           "Job failed\n" \
           "==========\n" \
           "Job content: #{job.inspect}\n" \

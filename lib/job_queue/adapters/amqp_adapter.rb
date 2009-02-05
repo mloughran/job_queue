@@ -17,7 +17,7 @@ class JobQueue::AMQPAdapter
       begin
         @queue.pop do |header, body| 
           next unless body
-          puts "AMQP received #{body}"
+          JobQueue.logger.info "AMQP received #{body}"
           yield body
         end
       rescue => e

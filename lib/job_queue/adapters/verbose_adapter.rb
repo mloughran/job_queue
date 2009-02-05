@@ -8,9 +8,9 @@ class JobQueue::VerboseAdapter
   end
   
   def put(string)
-    puts "===== NEW JOB ADDED TO QUEUE ===="
-    puts string
-    puts "===== END OF MESSAGE ============"
+    JobQueue.logger.debug "===== NEW JOB ADDED TO QUEUE ===="
+    JobQueue.logger.debug string
+    JobQueue.logger.debug "===== END OF MESSAGE ============"
   end
   
   def subscribe(error_report, &block)

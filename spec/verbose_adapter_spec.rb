@@ -1,12 +1,14 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-describe JobQueue::TestAdapter do
+describe JobQueue::VerboseAdapter do
   before :all do
-    JobQueue.adapter = JobQueue::TestAdapter.new
+    JobQueue.adapter = JobQueue::VerboseAdapter.new
   end
   
   it "should write onto queue and output a very verbose message to stdout" do
-    pending "How to write expectation on puts?"
+    JobQueue.logger.should_receive(:debug).with("===== NEW JOB ADDED TO QUEUE ====")
+    JobQueue.logger.should_receive(:debug).with("hello")
+    JobQueue.logger.should_receive(:debug).with("===== END OF MESSAGE ============")
     
     JobQueue.put("hello")
   end
