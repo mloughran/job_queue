@@ -1,57 +1,38 @@
-require 'rubygems'
-require 'rake/gempackagetask'
-require 'rubygems/specification'
-require 'date'
+require 'rake'
+
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |s|
+    s.name = "job_queue"
+    s.summary = %Q{JobQueue means you don't have to worry about your queue any more!}
+    s.email = "me@mloughran.com"
+    s.homepage = "http://github.com/mloughran/job_queue"
+    s.description = "JobQueue means you don't have to worry about your queue any more!"
+    s.authors = ["Martyn Loughran"]
+  end
+rescue LoadError
+  puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
+end
+
+require 'rake/rdoctask'
+Rake::RDocTask.new do |rdoc|
+  rdoc.rdoc_dir = 'rdoc'
+  rdoc.title = 'job_queue'
+  rdoc.options << '--line-numbers' << '--inline-source'
+  rdoc.rdoc_files.include('README*')
+  rdoc.rdoc_files.include('lib/**/*.rb')
+end
+
 require 'spec/rake/spectask'
+Spec::Rake::SpecTask.new(:spec) do |t|
+  t.libs << 'lib' << 'spec'
+  t.spec_files = FileList['spec/**/*_spec.rb']
+end
 
-GEM = "job_queue"
-GEM_VERSION = "0.0.3"
-AUTHOR = "Martyn Loughran"
-EMAIL = "me@mloughran.com"
-HOMEPAGE = "http://github.com/mloughran/job_queue/"
-SUMMARY = "JobQueue means you don't have to worry about your queue any more!"
-
-spec = Gem::Specification.new do |s|
-  s.name = GEM
-  s.version = GEM_VERSION
-  s.platform = Gem::Platform::RUBY
-  s.has_rdoc = true
-  s.extra_rdoc_files = ["README.markdown", "LICENSE"]
-  s.summary = SUMMARY
-  s.description = s.summary
-  s.author = AUTHOR
-  s.email = EMAIL
-  s.homepage = HOMEPAGE
-  
-  # Uncomment this to add a dependency
-  # s.add_dependency "foo"
-  
-  s.require_path = 'lib'
-  s.autorequire = GEM
-  s.files = %w(LICENSE README.markdown Rakefile) + Dir.glob("{lib,spec}/**/*")
+Spec::Rake::SpecTask.new(:rcov) do |t|
+  t.libs << 'lib' << 'spec'
+  t.spec_files = FileList['spec/**/*_spec.rb']
+  t.rcov = true
 end
 
 task :default => :spec
-
-desc "Run specs"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb']
-  t.spec_opts = %w(-fs --color)
-end
-
-
-Rake::GemPackageTask.new(spec) do |pkg|
-  pkg.gem_spec = spec
-end
-
-desc "install the gem locally"
-task :install => [:package] do
-  sh %{sudo gem install pkg/#{GEM}-#{GEM_VERSION}}
-end
-
-desc "create a gemspec file"
-task :make_spec do
-  File.open("#{GEM}.gemspec", "w") do |file|
-    file.puts spec.to_ruby
-  end
-end
