@@ -32,7 +32,7 @@ describe JobQueue::BeanstalkAdapter do
     pending "use proper logger to assert things against"
     JobQueue.put("hello")
     
-    error_report = Proc.new do |e|
+    error_report = Proc.new do |job, e|
       puts "Yikes that broke matey!"
     end
     
