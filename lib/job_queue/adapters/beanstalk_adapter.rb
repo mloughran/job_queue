@@ -9,7 +9,7 @@ class JobQueue::BeanstalkAdapter
     @beanstalk.put(string)
   end
   
-  def subscribe(&block)
+  def subscribe(error_report, &block)
     loop do
       begin
         job = @beanstalk.reserve
@@ -17,8 +17,7 @@ class JobQueue::BeanstalkAdapter
         yield job.body
         job.delete
       rescue => e
-        # TODO: Improve error logging
-        puts "Job failed: #{e.message}"
+        error_report.call(job.body, e)
       end
     end
   end

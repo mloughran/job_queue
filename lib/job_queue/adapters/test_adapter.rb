@@ -7,10 +7,14 @@ class JobQueue::TestAdapter
     @queue << string
   end
   
-  def subscribe(&block)
+  def subscribe(error_report, &block)
     loop do
-      sleep 0.1 if @queue.empty?
-      yield @queue.shift
+      begin
+        sleep 0.1 if @queue.empty?
+        yield @queue.shift
+      rescue
+        error_report.call(job.body, e)
+      end
     end
   end
 end

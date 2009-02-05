@@ -12,7 +12,7 @@ class JobQueue::AMQPAdapter
     @queue.publish(string, :persistent => true)
   end
   
-  def subscribe(&block)
+  def subscribe(error_report, &block)
     EM.add_periodic_timer(0) do
       begin
         @queue.pop do |header, body| 
@@ -21,8 +21,7 @@ class JobQueue::AMQPAdapter
           yield body
         end
       rescue => e
-        # TODO: Improve error logging
-        puts "Job failed: #{e.message}"
+        error_report.call(job.body, e)
       end
     end
   end

@@ -24,9 +24,19 @@ class JobQueue
     adapter.put(string)
   end
   
-  def self.subscribe(&block)
+  def self.subscribe(error_report = nil, &block)
     catch :stop do
-      adapter.subscribe(&block)
+      error_report ||= Proc.new do |job, e|
+        puts \
+          "Job failed\n" \
+          "==========\n" \
+          "Job content: #{job.inspect}\n" \
+          "Exception: #{e.message}\n" \
+          "#{e.backtrace.join("\n")}\n" \
+          "\n"
+      end
+      
+      adapter.subscribe(error_report, &block)
     end
   end
 end

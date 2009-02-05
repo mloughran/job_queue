@@ -13,7 +13,7 @@ class JobQueue::VerboseAdapter
     puts "===== END OF MESSAGE ============"
   end
   
-  def subscribe(&block)
+  def subscribe(error_report, &block)
     raise "Not implemented. Use a better adapter!!"
   end
 end
