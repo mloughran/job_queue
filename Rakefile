@@ -5,10 +5,10 @@ require 'date'
 require 'spec/rake/spectask'
 
 GEM = "job_queue"
-GEM_VERSION = "0.0.2"
+GEM_VERSION = "0.0.3"
 AUTHOR = "Martyn Loughran"
 EMAIL = "me@mloughran.com"
-HOMEPAGE = "http://mloughran.com"
+HOMEPAGE = "http://github.com/mloughran/job_queue/"
 SUMMARY = "JobQueue means you don't have to worry about your queue any more!"
 
 spec = Gem::Specification.new do |s|
