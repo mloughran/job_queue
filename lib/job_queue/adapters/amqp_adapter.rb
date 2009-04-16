@@ -1,7 +1,7 @@
 require 'mq'
 
 class JobQueue::AMQPAdapter
-  def initialize
+  def initialize(options = {})
     amq = MQ.new
     @exchange = amq.direct('photo', :durable => true)
     @queue = amq.queue('photo_worker', :durable => true)

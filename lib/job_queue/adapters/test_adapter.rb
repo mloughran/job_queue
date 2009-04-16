@@ -1,5 +1,5 @@
 class JobQueue::TestAdapter
-  def initialize
+  def initialize(options = {})
     @queue = []
   end
   

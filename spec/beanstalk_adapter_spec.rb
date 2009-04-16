@@ -4,7 +4,19 @@ describe JobQueue::BeanstalkAdapter do
   before :all do
     JobQueue.adapter = JobQueue::BeanstalkAdapter.new
   end
-  
+
+  describe '#new' do
+    it "should default to localhost:11300" do
+      Beanstalk::Pool.should_receive(:new).with(['localhost:11300'])
+      JobQueue::BeanstalkAdapter.new
+    end
+
+    it "should use options provided" do
+      Beanstalk::Pool.should_receive(:new).with(['12.34.56.78:12345'])
+      JobQueue::BeanstalkAdapter.new(:host => '12.34.56.78', :port => 12345)
+    end
+  end
+
   it "should write onto queue and fetch stuff back off" do
     JobQueue.put("hello")
     

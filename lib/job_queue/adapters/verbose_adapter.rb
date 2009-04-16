@@ -3,7 +3,7 @@
 # It might be useful for testing.
 # 
 class JobQueue::VerboseAdapter
-  def initialize
+  def initialize(options = {})
     
   end
   
