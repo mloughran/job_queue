@@ -2,9 +2,8 @@ require 'beanstalk-client'
 
 class JobQueue::BeanstalkAdapter
   def initialize(options = {})
-    host = options[:host] || 'localhost'
-    port = options[:port] || 11300
-    @beanstalk = Beanstalk::Pool.new(["#{host}:#{port}"])
+    hosts = options[:hosts] || 'localhost:11300'
+    @beanstalk = Beanstalk::Pool.new([hosts].flatten)
   end
   
   def put(string)

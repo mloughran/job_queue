@@ -11,9 +11,19 @@ describe JobQueue::BeanstalkAdapter do
       JobQueue::BeanstalkAdapter.new
     end
 
-    it "should use options provided" do
+    it "should accept one beanstalk instance" do
       Beanstalk::Pool.should_receive(:new).with(['12.34.56.78:12345'])
-      JobQueue::BeanstalkAdapter.new(:host => '12.34.56.78', :port => 12345)
+      JobQueue::BeanstalkAdapter.new(:hosts => '12.34.56.78:12345')
+    end
+    
+    it "should allow multiple beanstalk instances" do
+      Beanstalk::Pool.should_receive(:new).with([
+        '12.34.56.78:12345',
+        '87.65.43.21:54321'
+      ])
+      JobQueue::BeanstalkAdapter.new({
+        :hosts => ['12.34.56.78:12345', '87.65.43.21:54321']
+      })
     end
   end
 
