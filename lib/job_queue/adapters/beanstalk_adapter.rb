@@ -2,18 +2,19 @@ require 'beanstalk-client'
 
 class JobQueue::BeanstalkAdapter
   def initialize(options = {})
-    hosts = options[:hosts] || 'localhost:11300'
-    @beanstalk = Beanstalk::Pool.new([hosts].flatten)
+    @hosts = options[:hosts] || 'localhost:11300'
   end
   
-  def put(string)
-    @beanstalk.put(string)
+  def put(string, queue, priority)
+    beanstalk_pool(queue).put(string)
   end
   
-  def subscribe(error_report, &block)
+  def subscribe(error_report, queues, &block)
+    pool = Beanstalk::Pool.new([@hosts].flatten)
+    pool.watch([queues].flatten)
     loop do
       begin
-        job = @beanstalk.reserve(1)
+        job = pool.reserve(1)
         JobQueue.logger.info "Beanstalk received #{job.body}"
         begin
           yield job.body
@@ -24,6 +25,13 @@ class JobQueue::BeanstalkAdapter
       rescue Beanstalk::TimedOut
         # Do nothing - retry to reseve (from another host?)
       end
+    end
+  end
+  
+  def beanstalk_pool(queue)
+    @beanstalk_pools ||= {}
+    @beanstalk_pools[queue] ||= begin
+      Beanstalk::Pool.new([@hosts].flatten, queue)
     end
   end
 end

@@ -2,24 +2,32 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe JobQueue::BeanstalkAdapter do
   describe '#new' do
+
+    before(:each) do
+      @pool = Beanstalk::Pool.new(['localhost:11300'])
+    end
+    
     it "should default to localhost:11300" do
-      Beanstalk::Pool.should_receive(:new).with(['localhost:11300'])
-      JobQueue::BeanstalkAdapter.new
+      Beanstalk::Pool.should_receive(:new).with(['localhost:11300'], "default").and_return @pool
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new
+      JobQueue.put('test')
     end
 
     it "should accept one beanstalk instance" do
-      Beanstalk::Pool.should_receive(:new).with(['12.34.56.78:12345'])
-      JobQueue::BeanstalkAdapter.new(:hosts => '12.34.56.78:12345')
+        Beanstalk::Pool.should_receive(:new).with(['12.34.56.78:12345'], 'default').and_return(@pool)
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new(:hosts => '12.34.56.78:12345')
+      JobQueue.put('test')
     end
     
     it "should allow multiple beanstalk instances" do
       Beanstalk::Pool.should_receive(:new).with([
         '12.34.56.78:12345',
         '87.65.43.21:54321'
-      ])
-      JobQueue::BeanstalkAdapter.new({
+      ], 'default').and_return(@pool)
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new({
         :hosts => ['12.34.56.78:12345', '87.65.43.21:54321']
       })
+      JobQueue.put('test')
     end
   end
   
@@ -65,6 +73,21 @@ describe JobQueue::BeanstalkAdapter do
       JobQueue.subscribe(error_report) do |job|
         index +=1
         raise 'foo' if index == 1
+        throw :stop
+      end
+    end
+    
+    it "should put jobs onto a named queue and only read off that queue" do
+      JobQueue.put("hello", :queue => "test")
+      lambda {
+        Timeout.timeout(0.1) do
+          JobQueue.subscribe(:queue => "foo") do |job|
+            throw :stop
+          end
+        end
+      }.should_not raise_error(Timeout::Error)
+      JobQueue.subscribe(:queue => "test") do |body|
+        body.should == 'hello'
         throw :stop
       end
     end

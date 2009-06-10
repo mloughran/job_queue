@@ -36,7 +36,8 @@ class JobQueue
     adapter.put(string, queue, priority)
   end
   
-  def self.subscribe(error_report = nil, &block)
+  def self.subscribe(error_report = nil, options = {}, &block)
+    queue = options[:queue] || 'default'
     catch :stop do
       error_report ||= Proc.new do |job_body, e|
         JobQueue.logger.error \
@@ -48,7 +49,7 @@ class JobQueue
           "\n"
       end
       
-      adapter.subscribe(error_report, &block)
+      adapter.subscribe(error_report, queue, &block)
     end
   end
 end
