@@ -13,12 +13,16 @@ class JobQueue::BeanstalkAdapter
   def subscribe(error_report, &block)
     loop do
       begin
-        job = @beanstalk.reserve
+        job = @beanstalk.reserve(1)
         JobQueue.logger.info "Beanstalk received #{job.body}"
-        yield job.body
-        job.delete
-      rescue => e
-        error_report.call(job.body, e)
+        begin
+          yield job.body
+        rescue => e
+          error_report.call(job.body, e)
+          job.delete
+        end
+      rescue Beanstalk::TimedOut
+        # Do nothing - retry to reseve (from another host?)
       end
     end
   end

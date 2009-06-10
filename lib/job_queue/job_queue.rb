@@ -30,17 +30,19 @@ class JobQueue
     end
   end
   
-  def self.put(string)
-    adapter.put(string)
+  def self.put(string, options = {})
+    queue = options[:queue] || 'default'
+    priority = options[:priority] || 50
+    adapter.put(string, queue, priority)
   end
   
   def self.subscribe(error_report = nil, &block)
     catch :stop do
-      error_report ||= Proc.new do |job, e|
+      error_report ||= Proc.new do |job_body, e|
         JobQueue.logger.error \
           "Job failed\n" \
           "==========\n" \
-          "Job content: #{job.inspect}\n" \
+          "Job content: #{job_body.inspect}\n" \
           "Exception: #{e.message}\n" \
           "#{e.backtrace.join("\n")}\n" \
           "\n"
