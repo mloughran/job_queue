@@ -61,6 +61,19 @@ describe JobQueue::BeanstalkAdapter do
     end
   end
 
+  describe "job_stats" do
+    before :all do
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new
+    end
+
+    it "should gracefully deal with jobs where connection no longer exists" do
+      JobQueue.job_stats("localhost:11305_1").should be_nil
+    end
+
+    it "should gracefully deal with jobs where job doesn't exist" do
+      JobQueue.job_stats("localhost:11300_1").should be_nil
+    end
+  end
 
   describe "when connecting to one instance" do
     before :all do

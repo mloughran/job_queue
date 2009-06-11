@@ -30,8 +30,9 @@ class JobQueue::BeanstalkAdapter
   
   def job_stats(job_id)
     host, id = job_id.split('_')
-    beanstalk_pool.job_stats(id).
-      select { |k, v| k == host }[0][1]
+    beanstalk_pool.job_stats(id).select { |k, v| k == host }[0][1]
+  rescue Beanstalk::NotFoundError
+    nil
   end
 
   def beanstalk_pool(queue='default')
