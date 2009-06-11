@@ -50,6 +50,25 @@ describe JobQueue::BeanstalkAdapter do
       job_id.should == "localhost:11300_1"
     end
 
+    it "should assign job priority" do
+      jobs = ["1","2","3"]
+      JobQueue.put(jobs[2], :priority => 3)
+      JobQueue.put(jobs[1], :priority => 2)
+      JobQueue.put(jobs[0], :priority => 1)
+
+      jobs_received = []
+      should_not_timeout(0.5) {
+        index = 0
+        JobQueue.subscribe do |job_body|
+          index += 1
+          jobs_received << job_body
+          throw :stop if index == 3
+        end
+      }
+
+      jobs_received.should == jobs
+    end
+
     it "should be able to retrieve job stats by id" do
       job_id = JobQueue.put("hello 1")
       job_id.should == "localhost:11300_1"

@@ -6,7 +6,7 @@ class JobQueue::BeanstalkAdapter
   end
   
   def put(string, queue, priority)
-    job_info = beanstalk_pool(queue).put_and_report_conn(string)
+    job_info = beanstalk_pool(queue).put_and_report_conn(string, priority)
     "#{job_info[:host]}_#{job_info[:id]}"
   rescue Beanstalk::NotConnected
     raise JobQueue::NoConnectionAvailable
