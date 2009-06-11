@@ -6,7 +6,8 @@ class JobQueue::BeanstalkAdapter
   end
   
   def put(string, queue, priority)
-    beanstalk_pool(queue).put(string)
+    job_info = beanstalk_pool(queue).put_and_report_conn(string)
+    "#{job_info[:host]}_#{job_info[:id]}"
   end
   
   def subscribe(error_report, queue, &block)
@@ -27,10 +28,36 @@ class JobQueue::BeanstalkAdapter
     end
   end
   
-  def beanstalk_pool(queue)
+  def job_stats(job_id)
+    host, id = job_id.split('_')
+    beanstalk_pool.job_stats(id).
+      select { |k, v| k == host }[0][1]
+  end
+
+  def beanstalk_pool(queue='default')
     @beanstalk_pools ||= {}
     @beanstalk_pools[queue] ||= begin
       Beanstalk::Pool.new([@hosts].flatten, queue)
     end
   end
+
+  module BeanstalkExtension
+    def put_and_report_conn(body, pri=65536, delay=0, ttr=120)
+      send_to_rand_conn_and_report(:put, body, pri, delay, ttr)
+    end
+
+    def send_to_rand_conn_and_report(*args)
+      connect()
+      retry_wrap{
+        conn = pick_connection
+        {:host => conn.addr, :id => call_wrap(conn, *args)}
+      }
+    end
+
+    def job_stats(id)
+      make_hash(send_to_all_conns(:job_stats, id))
+    end
+  end
 end
+
+Beanstalk::Pool.send(:include, JobQueue::BeanstalkAdapter::BeanstalkExtension)

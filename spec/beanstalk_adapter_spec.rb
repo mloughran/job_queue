@@ -40,6 +40,28 @@ describe JobQueue::BeanstalkAdapter do
     end
   end
 
+  describe "put" do
+    before :all do
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new
+    end
+
+    it "should return the job id" do
+      job_id = JobQueue.put("hello 1")
+      job_id.should == "localhost:11300_1"
+    end
+
+    it "should be able to retrieve job stats by id" do
+      job_id = JobQueue.put("hello 1")
+      job_id.should == "localhost:11300_1"
+      JobQueue.put("hello 2")
+      stats = JobQueue.job_stats("localhost:11300_1")
+
+      stats["id"].should == 1
+      stats["tube"].should == "default"
+    end
+  end
+
+
   describe "when connecting to one instance" do
     before :all do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new

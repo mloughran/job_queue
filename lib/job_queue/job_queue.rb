@@ -53,4 +53,9 @@ class JobQueue
       adapter.subscribe(error_report, queue, &block)
     end
   end
+
+  # Returns a hash of info (exact details dependent on adapter)
+  def self.job_stats(job_id)
+    adapter.job_stats(job_id)
+  end
 end
