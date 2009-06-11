@@ -36,10 +36,10 @@ class JobQueue
     adapter.put(string, queue, priority)
   end
   
-  def self.subscribe(error_report = nil, options = {}, &block)
+  def self.subscribe(options = {}, &block)
     queue = options[:queue] || 'default'
-    catch :stop do
-      error_report ||= Proc.new do |job_body, e|
+    error_report = options[:error_report] || begin
+      Proc.new do |job_body, e|
         JobQueue.logger.error \
           "Job failed\n" \
           "==========\n" \
@@ -48,7 +48,8 @@ class JobQueue
           "#{e.backtrace.join("\n")}\n" \
           "\n"
       end
-      
+    end
+    catch :stop do
       adapter.subscribe(error_report, queue, &block)
     end
   end

@@ -9,9 +9,8 @@ class JobQueue::BeanstalkAdapter
     beanstalk_pool(queue).put(string)
   end
   
-  def subscribe(error_report, queues, &block)
-    pool = Beanstalk::Pool.new([@hosts].flatten)
-    pool.watch([queues].flatten)
+  def subscribe(error_report, queue, &block)
+    pool = Beanstalk::Pool.new([@hosts].flatten, queue)
     loop do
       begin
         job = pool.reserve(1)

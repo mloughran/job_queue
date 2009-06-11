@@ -1,12 +1,21 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
 describe JobQueue::BeanstalkAdapter do
-  describe '#new' do
+  before :each do
+    system "beanstalkd -p 10001 -d"
+    system "beanstalkd -p 10002 -d"
+    system "beanstalkd -p 11300 -d"
+  end
 
+  after :each do
+    system "killall beanstalkd"
+  end
+
+  describe '#new' do
     before(:each) do
       @pool = Beanstalk::Pool.new(['localhost:11300'])
     end
-    
+
     it "should default to localhost:11300" do
       Beanstalk::Pool.should_receive(:new).with(['localhost:11300'], "default").and_return @pool
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
@@ -14,11 +23,11 @@ describe JobQueue::BeanstalkAdapter do
     end
 
     it "should accept one beanstalk instance" do
-        Beanstalk::Pool.should_receive(:new).with(['12.34.56.78:12345'], 'default').and_return(@pool)
+      Beanstalk::Pool.should_receive(:new).with(['12.34.56.78:12345'], 'default').and_return(@pool)
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new(:hosts => '12.34.56.78:12345')
       JobQueue.put('test')
     end
-    
+
     it "should allow multiple beanstalk instances" do
       Beanstalk::Pool.should_receive(:new).with([
         '12.34.56.78:12345',
@@ -30,38 +39,44 @@ describe JobQueue::BeanstalkAdapter do
       JobQueue.put('test')
     end
   end
-  
+
   describe "when connecting to one instance" do
     before :all do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
     end
-    
+
     it "should write onto queue and fetch stuff back off" do
       JobQueue.put("hello")
 
-      JobQueue.subscribe do |job|
-        @job = job
-        throw :stop
-      end
+      should_not_timeout {
+        JobQueue.subscribe do |job|
+          @job = job
+          throw :stop
+        end
+      }
 
       @job.should == "hello"
     end
 
     it "should output message if error raised in job" do
       JobQueue.put("hello")
+      JobQueue.put("hello2")
 
       JobQueue.logger.should_receive(:error).with(/Job failed\w*/)
 
-      index = 0
-      JobQueue.subscribe do |job|
-        index +=1
-        raise 'foo' if index == 1
-        throw :stop
-      end
+      should_not_timeout {
+        index = 0
+        JobQueue.subscribe do |job|
+          index +=1
+          raise 'foo' if index == 1
+          throw :stop
+        end
+      }
     end
 
     it "should use error_report block if supplied" do
       JobQueue.put("hello")
+      JobQueue.put("hello2")
 
       error_report = Proc.new do |job, e|
         JobQueue.logger.error "Yikes that broke matey!"
@@ -69,14 +84,16 @@ describe JobQueue::BeanstalkAdapter do
 
       JobQueue.logger.should_receive(:error).with("Yikes that broke matey!")
 
-      index = 0
-      JobQueue.subscribe(error_report) do |job|
-        index +=1
-        raise 'foo' if index == 1
-        throw :stop
-      end
+      should_not_timeout {
+        index = 0
+        JobQueue.subscribe(:error_report => error_report) do |job|
+          index +=1
+          raise 'foo' if index == 1
+          throw :stop
+        end
+      }
     end
-    
+
     it "should put jobs onto a named queue and only read off that queue" do
       JobQueue.put("hello", :queue => "test")
       lambda {
@@ -85,11 +102,13 @@ describe JobQueue::BeanstalkAdapter do
             throw :stop
           end
         end
-      }.should_not raise_error(Timeout::Error)
-      JobQueue.subscribe(:queue => "test") do |body|
-        body.should == 'hello'
-        throw :stop
-      end
+      }.should raise_error(Timeout::Error)
+      should_not_timeout {
+        JobQueue.subscribe(:queue => "test") do |body|
+          body.should == 'hello'
+          throw :stop
+        end
+      }
     end
   end
 
@@ -107,24 +126,23 @@ describe JobQueue::BeanstalkAdapter do
         throw :stop
       end
     end
-
+    
+    # TODO: This test is brittle.
     it "should be possible to retrieve all jobs supplied" do
       # Put some jobs on the queue
       jobs = []
-      (1..10).each do |i|
+      (1..8).each do |i|
         body = i
         JobQueue.put("#{body}")
         jobs << body
       end
 
-      lambda {
-        Timeout::timeout(3.5) do
-          JobQueue.subscribe do |job|
-            jobs.delete job.to_i
-            throw :stop if jobs.empty?
-          end
+      should_not_timeout(3.5) {
+        JobQueue.subscribe do |job|
+          jobs.delete job.to_i
+          throw :stop if jobs.empty?
         end
-      }.should_not raise_error(Timeout::Error)
+      }
     end
 
     it "should not log any errors when reserve times out" do
@@ -138,4 +156,12 @@ describe JobQueue::BeanstalkAdapter do
       end
     end
   end
+end
+
+def should_not_timeout(timeout = 0.1)
+  lambda {
+    Timeout.timeout(timeout) do
+      yield
+    end
+  }.should_not raise_error(Timeout::Error)
 end
