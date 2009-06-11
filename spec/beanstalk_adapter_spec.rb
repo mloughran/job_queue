@@ -59,6 +59,20 @@ describe JobQueue::BeanstalkAdapter do
       stats["id"].should == 1
       stats["tube"].should == "default"
     end
+
+    it "should raise error when no connections exist" do
+      system "killall beanstalkd"
+      lambda {
+        JobQueue.put('test')
+      }.should raise_error(JobQueue::NoConnectionAvailable)
+    end
+
+    it "should succeed when one connection fails" do
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new({
+        :hosts => ['localhost:10001', 'localhost:666']
+      })
+      10.times{ job_id = JobQueue.put("hello 1")}
+    end
   end
 
   describe "job_stats" do
