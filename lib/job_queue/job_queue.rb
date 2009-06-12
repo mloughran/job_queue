@@ -61,4 +61,7 @@ class JobQueue
 
   class NoConnectionAvailable < RuntimeError
   end
+
+  class ArgumentError < ::ArgumentError
+  end
 end

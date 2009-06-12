@@ -6,6 +6,9 @@ class JobQueue::BeanstalkAdapter
   end
 
   def put(string, queue, priority, ttr)
+    ttr = ttr.floor #rounding because Beanstalk doesnt accept float numbers
+    raise JobQueue::ArgumentError, "TTR must be greater than 1" if ttr < 2
+
     delay = 0
     job_info = beanstalk_pool(queue).put_and_report_conn \
       string, priority, delay, ttr

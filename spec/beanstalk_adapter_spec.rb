@@ -92,6 +92,16 @@ describe JobQueue::BeanstalkAdapter do
       })
       10.times{ job_id = JobQueue.put("hello 1")}
     end
+
+    it "should raise an error if a ttr of < 2 is specified" do
+      lambda {
+        JobQueue.put('test', :ttr => 1.9)
+      }.should raise_error(JobQueue::ArgumentError)
+
+      lambda {
+        JobQueue.put('test', :ttr => 2)
+      }.should_not raise_error(JobQueue::ArgumentError)
+    end
   end
 
   describe "subscribe" do
