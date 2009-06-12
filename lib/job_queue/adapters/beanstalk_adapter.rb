@@ -24,6 +24,7 @@ class JobQueue::BeanstalkAdapter
         Timeout::timeout([time_left - 1, 1].max) do
           yield job.body
         end
+        job.delete
       rescue Timeout::Error
         JobQueue.logger.warn "Job timed out"
         begin

@@ -110,6 +110,23 @@ describe JobQueue::BeanstalkAdapter do
     end
   end
 
+  describe "subscribe" do
+    before :all do
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new
+    end
+
+    it "should delete a job once it has been succesfully excecuted" do
+      job_id = JobQueue.put('testdeleted')
+      JobQueue.put('foo')
+      index = 0
+      JobQueue.subscribe do |body|
+        index += 1
+        throw :stop if index == 2
+      end
+      JobQueue.job_stats(job_id).should be_nil
+    end
+  end
+
   describe "job_stats" do
     before :all do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
