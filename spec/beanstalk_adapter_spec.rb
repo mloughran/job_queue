@@ -92,6 +92,22 @@ describe JobQueue::BeanstalkAdapter do
       })
       10.times{ job_id = JobQueue.put("hello 1")}
     end
+
+    it "should report and error and delete the job if a job times out" do
+      job_id = JobQueue.put("job1", :ttr => 2)
+      JobQueue.put('test')
+
+      JobQueue.logger.should_receive(:warn).with("Job timed out")
+
+      index = 0
+      JobQueue.subscribe do |body|
+        index += 1
+        throw :stop if index == 2
+        sleep 2.2
+      end
+
+      JobQueue.job_stats(job_id).should be_nil
+    end
   end
 
   describe "job_stats" do

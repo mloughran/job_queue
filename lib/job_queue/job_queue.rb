@@ -33,7 +33,8 @@ class JobQueue
   def self.put(string, options = {})
     queue = options[:queue] || 'default'
     priority = options[:priority] || 50
-    adapter.put(string, queue, priority)
+    ttr = options[:ttr] || 60
+    adapter.put(string, queue, priority, ttr)
   end
   
   def self.subscribe(options = {}, &block)

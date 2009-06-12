@@ -4,32 +4,51 @@ class JobQueue::BeanstalkAdapter
   def initialize(options = {})
     @hosts = options[:hosts] || 'localhost:11300'
   end
-  
-  def put(string, queue, priority)
-    job_info = beanstalk_pool(queue).put_and_report_conn(string, priority)
+
+  def put(string, queue, priority, ttr)
+    delay = 0
+    job_info = beanstalk_pool(queue).put_and_report_conn \
+      string, priority, delay, ttr
     "#{job_info[:host]}_#{job_info[:id]}"
   rescue Beanstalk::NotConnected
     raise JobQueue::NoConnectionAvailable
   end
-  
+
   def subscribe(error_report, queue, &block)
     pool = Beanstalk::Pool.new([@hosts].flatten, queue)
     loop do
       begin
         job = pool.reserve(1)
+        time_left = job.stats["time-left"]
         JobQueue.logger.info "Beanstalk received #{job.body}"
-        begin
+        Timeout::timeout([time_left - 1, 1].max) do
           yield job.body
-        rescue => e
-          error_report.call(job.body, e)
+        end
+      rescue Timeout::Error
+        JobQueue.logger.warn "Job timed out"
+        begin
           job.delete
+        rescue Beanstalk::NotFoundError
+          JobQueue.logger.error "Job timed out and could not be deleted"
         end
       rescue Beanstalk::TimedOut
         # Do nothing - retry to reseve (from another host?)
+      rescue => e
+        if job
+          error_report.call(job.body, e)
+          begin
+            job.delete
+          rescue Beanstalk::NotFoundError
+            JobQueue.logger.error "Job failed but could not be deleted"
+          end
+        else
+          JobQueue.logger.error "Unhandled exception: #{e.message}\n" \
+            "#{e.backtrace.join("\n")}\n"
+        end
       end
     end
   end
-  
+
   def job_stats(job_id)
     host, id = job_id.split('_')
     beanstalk_pool.job_stats(id).select { |k, v| k == host }[0][1]
