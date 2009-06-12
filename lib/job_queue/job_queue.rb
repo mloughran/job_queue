@@ -29,29 +29,28 @@ class JobQueue
       end
     end
   end
-  
+
   def self.put(string, options = {})
     queue = options[:queue] || 'default'
     priority = options[:priority] || 50
     ttr = options[:ttr] || 60
     adapter.put(string, queue, priority, ttr)
   end
-  
+
   def self.subscribe(options = {}, &block)
     queue = options[:queue] || 'default'
-    error_report = options[:error_report] || begin
-      Proc.new do |job_body, e|
-        JobQueue.logger.error \
-          "Job failed\n" \
-          "==========\n" \
-          "Job content: #{job_body.inspect}\n" \
-          "Exception: #{e.message}\n" \
-          "#{e.backtrace.join("\n")}\n" \
-          "\n"
-      end
+    error_report = options[:error_report] || Proc.new do |job_body, e|
+      JobQueue.logger.error \
+        "Job failed\n" \
+        "==========\n" \
+        "Job content: #{job_body.inspect}\n" \
+        "Exception: #{e.message}\n" \
+        "#{e.backtrace.join("\n")}\n" \
+        "\n"
     end
+    cleanup_task = options[:cleanup] || lambda {}
     catch :stop do
-      adapter.subscribe(error_report, queue, &block)
+      adapter.subscribe(error_report, cleanup_task, queue, &block)
     end
   end
 

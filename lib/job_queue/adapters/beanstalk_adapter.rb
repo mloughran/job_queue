@@ -14,7 +14,7 @@ class JobQueue::BeanstalkAdapter
     raise JobQueue::NoConnectionAvailable
   end
 
-  def subscribe(error_report, queue, &block)
+  def subscribe(error_report, cleanup_task, queue, &block)
     pool = Beanstalk::Pool.new([@hosts].flatten, queue)
     loop do
       begin
@@ -26,6 +26,7 @@ class JobQueue::BeanstalkAdapter
         end
         job.delete
       rescue Timeout::Error
+        cleanup_task.call(job.body)
         JobQueue.logger.warn "Job timed out"
         begin
           job.delete
