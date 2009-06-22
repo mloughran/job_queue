@@ -1,4 +1,5 @@
 require 'beanstalk-client'
+require 'timeout'
 
 class JobQueue::BeanstalkAdapter
   def initialize(options = {})
