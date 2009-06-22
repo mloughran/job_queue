@@ -16,26 +16,36 @@ describe JobQueue::BeanstalkAdapter do
 
   describe '#new' do
     before(:each) do
-      @pool = Beanstalk::Pool.new(['localhost:11300'])
+      @pool = JobQueue::BeanstalkAdapter::BeanstalkPoolFix.new([
+        'localhost:11300'
+      ])
     end
 
     it "should default to localhost:11300" do
-      Beanstalk::Pool.should_receive(:new).with(['localhost:11300'], "default").and_return @pool
+      JobQueue::BeanstalkAdapter::BeanstalkPoolFix.should_receive(:new).with(
+        ['localhost:11300'],
+        "default"
+      ).and_return @pool
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
       JobQueue.put('test')
     end
 
     it "should accept one beanstalk instance" do
-      Beanstalk::Pool.should_receive(:new).with(['12.34.56.78:12345'], 'default').and_return(@pool)
-      JobQueue.adapter = JobQueue::BeanstalkAdapter.new(:hosts => '12.34.56.78:12345')
+      JobQueue::BeanstalkAdapter::BeanstalkPoolFix.should_receive(:new).with(
+        ['12.34.56.78:12345'],
+        'default'
+      ).and_return(@pool)
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new(
+        :hosts => '12.34.56.78:12345'
+      )
       JobQueue.put('test')
     end
 
     it "should allow multiple beanstalk instances" do
-      Beanstalk::Pool.should_receive(:new).with([
-        '12.34.56.78:12345',
-        '87.65.43.21:54321'
-      ], 'default').and_return(@pool)
+      JobQueue::BeanstalkAdapter::BeanstalkPoolFix.should_receive(:new).with(
+        ['12.34.56.78:12345', '87.65.43.21:54321'],
+        'default'
+      ).and_return(@pool)
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new({
         :hosts => ['12.34.56.78:12345', '87.65.43.21:54321']
       })
@@ -158,10 +168,36 @@ describe JobQueue::BeanstalkAdapter do
 
       File.exists?('jobcleanup').should be_false
     end
+
+    # This test is for a patch that fixes a connection leaking issue in
+    # beanstalk-client 1.0.2
+    it "should not open more connections to beanstalk over time" do
+      # Every 1.5 seconds, add a new job to the queue and check how many
+      # connections are currently open according to beanstalkd.
+      connections = []
+      Thread.new do
+        pool = Beanstalk::Pool.new(["localhost:11300"])
+        loop do
+          sleep 1.5
+          JobQueue.put("job")
+          connections << pool.stats["total-connections"]
+        end
+      end
+
+      # Subscribe for 3 loops - gives time for a few timeouts to occur (1s)
+      i = 0
+      JobQueue.subscribe do |job|
+        i += 1
+        throw :stop if i == 3
+      end
+
+      # The number of connections should have been constant
+      connections.uniq.size.should == 1
+    end
   end
 
   describe "job_stats" do
-    before :all do
+    before :each do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
     end
 

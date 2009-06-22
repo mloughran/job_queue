@@ -19,7 +19,7 @@ class JobQueue::BeanstalkAdapter
   end
 
   def subscribe(error_report, cleanup_task, queue, &block)
-    pool = Beanstalk::Pool.new([@hosts].flatten, queue)
+    pool = BeanstalkPoolFix.new([@hosts].flatten, queue)
     loop do
       begin
         job = pool.reserve(1)
@@ -65,11 +65,11 @@ class JobQueue::BeanstalkAdapter
   def beanstalk_pool(queue='default')
     @beanstalk_pools ||= {}
     @beanstalk_pools[queue] ||= begin
-      Beanstalk::Pool.new([@hosts].flatten, queue)
+      BeanstalkPoolFix.new([@hosts].flatten, queue)
     end
   end
 
-  module BeanstalkExtension
+  class BeanstalkPoolFix < Beanstalk::Pool
     def put_and_report_conn(body, pri=65536, delay=0, ttr=120)
       send_to_rand_conn_and_report(:put, body, pri, delay, ttr)
     end
@@ -85,7 +85,16 @@ class JobQueue::BeanstalkAdapter
     def job_stats(id)
       make_hash(send_to_all_conns(:job_stats, id))
     end
+
+    private
+
+    def call_wrap(c, *args)
+      self.last_conn = c
+      c.send(*args)
+    rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Beanstalk::UnexpectedResponse => ex
+      # puts "Beanstalk exception: #{ex.class}" # Useful for debugging
+      self.remove(c) unless ex.class == Beanstalk::TimedOut
+      raise ex
+    end
   end
 end
-
-Beanstalk::Pool.send(:include, JobQueue::BeanstalkAdapter::BeanstalkExtension)
