@@ -2,9 +2,12 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe JobQueue::BeanstalkAdapter do
   before :each do
-    system "beanstalkd -p 10001 -d"
-    system "beanstalkd -p 10002 -d"
-    system "beanstalkd -p 11300 -d"
+    # On OSX we the -d flag doesn't work for beanstalk 1.3. This is a
+    # workaround for that issue. We sleep a little to let processes start.
+    system "beanstalkd -p 10001 &"
+    system "beanstalkd -p 10002 &"
+    system "beanstalkd -p 11300 &"
+    sleep 0.1
   end
 
   after :each do
@@ -41,7 +44,7 @@ describe JobQueue::BeanstalkAdapter do
   end
 
   describe "put" do
-    before :all do
+    before :each do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
     end
 
@@ -105,7 +108,7 @@ describe JobQueue::BeanstalkAdapter do
   end
 
   describe "subscribe" do
-    before :all do
+    before :each do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
     end
 
@@ -172,7 +175,7 @@ describe JobQueue::BeanstalkAdapter do
   end
 
   describe "when connecting to one instance" do
-    before :all do
+    before :each do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
     end
 
@@ -244,7 +247,7 @@ describe JobQueue::BeanstalkAdapter do
   end
 
   describe "when connecting to multiple instances" do
-    before :all do
+    before :each do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new({
         :hosts => ['localhost:10001', 'localhost:10002']
       })
