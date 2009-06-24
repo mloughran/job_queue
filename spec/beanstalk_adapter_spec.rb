@@ -216,7 +216,9 @@ describe JobQueue::BeanstalkAdapter do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
     end
 
-    it_should_behave_like "JobQueue adapter named queues"
+    describe "common" do
+      it_should_behave_like "JobQueue adapter named queues"
+    end
 
     it "should write onto queue and fetch stuff back off" do
       JobQueue.put("hello")
