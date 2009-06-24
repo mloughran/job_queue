@@ -1,4 +1,5 @@
 require File.dirname(__FILE__) + '/spec_helper'
+require File.dirname(__FILE__) + '/common_adapter_spec'
 
 describe JobQueue::BeanstalkAdapter do
   before :each do
@@ -215,6 +216,8 @@ describe JobQueue::BeanstalkAdapter do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new
     end
 
+    it_should_behave_like "JobQueue adapter named queues"
+
     it "should write onto queue and fetch stuff back off" do
       JobQueue.put("hello")
 
@@ -259,23 +262,6 @@ describe JobQueue::BeanstalkAdapter do
         JobQueue.subscribe(:error_report => error_report) do |job|
           index +=1
           raise 'foo' if index == 1
-          throw :stop
-        end
-      }
-    end
-
-    it "should put jobs onto a named queue and only read off that queue" do
-      JobQueue.put("hello", :queue => "test")
-      lambda {
-        Timeout.timeout(0.1) do
-          JobQueue.subscribe(:queue => "foo") do |job|
-            throw :stop
-          end
-        end
-      }.should raise_error(Timeout::Error)
-      should_not_timeout {
-        JobQueue.subscribe(:queue => "test") do |body|
-          body.should == 'hello'
           throw :stop
         end
       }
@@ -326,12 +312,4 @@ describe JobQueue::BeanstalkAdapter do
       end
     end
   end
-end
-
-def should_not_timeout(timeout = 0.1)
-  lambda {
-    Timeout.timeout(timeout) do
-      yield
-    end
-  }.should_not raise_error(Timeout::Error)
 end
