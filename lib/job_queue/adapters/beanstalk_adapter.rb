@@ -24,7 +24,7 @@ class JobQueue::BeanstalkAdapter
       begin
         job = pool.reserve(1)
         time_left = job.stats["time-left"]
-        JobQueue.logger.info "Beanstalk received #{job.body}"
+        JobQueue.logger.debug "Beanstalk received #{job.body}"
         Timeout::timeout([time_left - 1, 1].max) do
           yield job.body
         end
