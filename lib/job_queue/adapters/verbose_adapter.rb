@@ -7,7 +7,7 @@ class JobQueue::VerboseAdapter
     
   end
   
-  def put(string)
+  def put(string, queue, priority, ttr)
     JobQueue.logger.debug "===== NEW JOB ADDED TO QUEUE ===="
     JobQueue.logger.debug string
     JobQueue.logger.debug "===== END OF MESSAGE ============"
