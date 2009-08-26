@@ -62,6 +62,12 @@ class JobQueue::BeanstalkAdapter
     nil
   end
 
+  def queue_length(queue)
+    beanstalk_pool.stats_tube(queue)["total-jobs"]
+  rescue Beanstalk::NotFoundError
+    0
+  end
+
   def beanstalk_pool(queue='default')
     @beanstalk_pools ||= {}
     @beanstalk_pools[queue] ||= begin

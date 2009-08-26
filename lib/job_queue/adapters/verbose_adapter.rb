@@ -16,4 +16,8 @@ class JobQueue::VerboseAdapter
   def subscribe(error_report, &block)
     raise "Not implemented. Use a better adapter!!"
   end
+
+  def queue_length(queue)
+    raise "Not supported"
+  end
 end

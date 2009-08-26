@@ -41,6 +41,10 @@ class JobQueue::TestAdapter
     get_queue(queue)
   end
 
+  def queue_length(queue)
+    @queues[queue].size
+  end
+
   private
 
   def get_queue(queue)

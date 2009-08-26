@@ -52,3 +52,11 @@ shared_examples_for "JobQueue adapter named queues" do
     }
   end
 end
+
+shared_examples_for "JobQueue adapter queue length" do
+  it "should report the length of the named queue" do
+    JobQueue.queue_length('test').should == 0
+    5.times { JobQueue.put("hello", :queue => "test") }
+    JobQueue.queue_length('test').should == 5
+  end
+end

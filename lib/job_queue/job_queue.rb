@@ -59,6 +59,10 @@ class JobQueue
     adapter.job_stats(job_id)
   end
 
+  def self.queue_length(queue = nil)
+    adapter.queue_length(queue)
+  end
+
   class NoConnectionAvailable < RuntimeError
   end
 

@@ -218,6 +218,7 @@ describe JobQueue::BeanstalkAdapter do
 
     describe "common" do
       it_should_behave_like "JobQueue adapter named queues"
+      it_should_behave_like "JobQueue adapter queue length"
     end
 
     it "should write onto queue and fetch stuff back off" do
@@ -275,6 +276,10 @@ describe JobQueue::BeanstalkAdapter do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new({
         :hosts => ['localhost:10001', 'localhost:10002']
       })
+    end
+
+    describe "common" do
+      it_should_behave_like "JobQueue adapter queue length"
     end
 
     it "should be possible to put jobs" do

@@ -10,6 +10,8 @@ describe JobQueue::TestAdapter do
   
   it_should_behave_like "JobQueue adapter named queues"
   
+  it_should_behave_like "JobQueue adapter queue length"
+
   it "should allow queue inspection as a hash" do
     JobQueue.adapter.queue.should == []
     JobQueue.put('hello')
