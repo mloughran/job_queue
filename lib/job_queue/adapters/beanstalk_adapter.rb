@@ -63,7 +63,7 @@ class JobQueue::BeanstalkAdapter
   end
 
   def queue_length(queue)
-    beanstalk_pool.stats_tube(queue)["total-jobs"]
+    beanstalk_pool.stats_tube(queue)["current-jobs-ready"]
   rescue Beanstalk::NotFoundError
     0
   end

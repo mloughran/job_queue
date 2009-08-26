@@ -58,5 +58,9 @@ shared_examples_for "JobQueue adapter queue length" do
     JobQueue.queue_length('test').should == 0
     5.times { JobQueue.put("hello", :queue => "test") }
     JobQueue.queue_length('test').should == 5
+    JobQueue.subscribe(:queue => "test") do |job|
+      throw :stop
+    end
+    JobQueue.queue_length('test').should == 4
   end
 end
