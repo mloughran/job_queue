@@ -211,6 +211,64 @@ describe JobQueue::BeanstalkAdapter do
     end
   end
 
+  describe "when no instances are available it should not kill the CPU by relentlessly trying to connect to beanstalk, rather it should retry and print a warning every second" do
+    it "(case that 0/1 instances available)" do
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new
+
+      system "killall beanstalkd"
+
+      JobQueue.logger.should_receive(:fatal).twice
+
+      begin
+        Timeout.timeout(1.1) do
+          JobQueue.subscribe do |job|
+            puts job
+          end
+        end
+      rescue Timeout::Error
+        nil
+      end
+    end
+
+    it "(case that 0/2 instances available)" do
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new({
+        :hosts => ['localhost:10001', 'localhost:10002']
+      })
+
+      system "killall beanstalkd"
+
+      JobQueue.logger.should_receive(:fatal).twice
+
+      begin
+        Timeout.timeout(1.1) do
+          JobQueue.subscribe do |job|
+            puts job
+          end
+        end
+      rescue Timeout::Error
+        nil
+      end
+    end
+
+    it "(case that 1/2 instances available)" do
+      JobQueue.adapter = JobQueue::BeanstalkAdapter.new({
+        :hosts => ['localhost:10001', 'localhost:10009']
+      })
+
+      JobQueue.logger.should_not_receive(:fatal)
+
+      begin
+        Timeout.timeout(1.1) do
+          JobQueue.subscribe do |job|
+            puts job
+          end
+        end
+      rescue Timeout::Error
+        nil
+      end
+    end
+  end
+
   describe "when connecting to one instance" do
     before :each do
       JobQueue.adapter = JobQueue::BeanstalkAdapter.new

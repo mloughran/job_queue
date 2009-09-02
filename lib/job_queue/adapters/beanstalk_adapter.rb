@@ -39,6 +39,10 @@ class JobQueue::BeanstalkAdapter
         end
       rescue Beanstalk::TimedOut
         # Do nothing - retry to reseve (from another host?)
+      rescue Beanstalk::NotConnected
+        JobQueue.logger.fatal "Could not connect any beanstalk hosts. " \
+          "Retrying in 1s."
+        sleep 1
       rescue => e
         if job
           error_report.call(job.body, e)
