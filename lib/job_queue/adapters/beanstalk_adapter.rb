@@ -95,16 +95,5 @@ class JobQueue::BeanstalkAdapter
     def job_stats(id)
       make_hash(send_to_all_conns(:job_stats, id))
     end
-
-    private
-
-    def call_wrap(c, *args)
-      self.last_conn = c
-      c.send(*args)
-    rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Beanstalk::UnexpectedResponse => ex
-      # puts "Beanstalk exception: #{ex.class}" # Useful for debugging
-      self.remove(c) unless ex.class == Beanstalk::TimedOut
-      raise ex
-    end
   end
 end
